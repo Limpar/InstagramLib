@@ -1,6 +1,28 @@
-import instagram
 import os
+import time
+
 from urllib import request
+
+import instagram
+
+
+def download_single_file(url, new_name):
+    """
+    downloads single file by url as new_name
+    :param url: global link as atr
+    :param new_name: global name as str
+    :return: fail or success as str
+    """
+    try:
+        request.urlretrieve(url, new_name)
+        result = "success"
+    except:
+        result = "fail"
+    finally:
+        return result
+
+
+
 
 def download_video_files(urls, account):
     """
@@ -21,25 +43,17 @@ def download_video_files(urls, account):
     with open(log_file, "a") as fp:
         for numb, link in enumerate(urls):
             file_name = os.path.join(acc_folder, f"{account}_{numb}.mp4")
-            try:
-                request.urlretrieve(link, file_name)
-                result = "success"
-            except:
-                print(link, "downloading failed")
-                result = "fail"
-            finally:
-                fp.write(f"{time.ctime()}: {link} - {result}\n")
+            result = download_single_file(link, file_name)
+            fp.write(f"{time.ctime()}: {link} - {result}\n")
+
 
 if __name__ == "__main__":
 
     downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
 
-
     new_file_name = os.path.join(downloads_folder, NEEDED_ACCOUNT + "_video_urls.txt")
 
-
     agent = instagram.AgentAccount(TEST_LOGIN, TEST_PASSWORD)
-
 
     account = instagram.Account(NEEDED_ACCOUNT)
     agent.update(account)
