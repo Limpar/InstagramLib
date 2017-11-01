@@ -1,17 +1,18 @@
 import os
 import time
+import threading
 
 from urllib import request
 
 import instagram
 
 
-def download_single_file(url, new_name):
+def download_video(url, new_name):
     """
     downloads single file by url as new_name
     :param url: global link as atr
     :param new_name: global name as str
-    :return: fail or success as str
+    :return: None
     """
     try:
         request.urlretrieve(url, new_name)
@@ -19,12 +20,10 @@ def download_single_file(url, new_name):
     except:
         result = "fail"
     finally:
-        return result
+        print(f"{time.ctime()}: {url} - {result}\n")
 
 
-
-
-def download_video_files(urls, account):
+def download_video_files(urls, instgram_account):
     """
     simple download files in ~/Downlads/profile_folder
     saves log file ~/Downlaods/insta_downloader_log_file.txt
@@ -34,17 +33,20 @@ def download_video_files(urls, account):
     :param urls: str list
     :return: nothing
     """
-    folder = os.path.join(os.path.expanduser("~"), "Downloads")
-    acc_folder = os.path.join(folder, account)
-    os.mkdir(acc_folder)
+    user_downloads_folder = os.path.join(os.path.expanduser("~"), "Downloads")
+    account_folder = os.path.join(user_downloads_folder, instgram_account)
+    os.mkdir(account_folder)
 
-    log_file = os.path.join(folder, "insta_downloader_log_file.txt")
+    threads = []
 
-    with open(log_file, "a") as fp:
-        for numb, link in enumerate(urls):
-            file_name = os.path.join(acc_folder, f"{account}_{numb}.mp4")
-            result = download_single_file(link, file_name)
-            fp.write(f"{time.ctime()}: {link} - {result}\n")
+    for numb, link in enumerate(urls):
+        file_name = os.path.join(account_folder, f"{account}_{numb}.mp4")
+        thread = threading.Thread(target=download_video, args=(link, file_name))
+        # download_video(link, os.path.join(account_folder, f"{account}_{numb}.mp4"))
+        threads.append(thread)
+        thread.start()
+
+    [thread.join() for thread in threads]
 
 
 if __name__ == "__main__":
@@ -61,15 +63,11 @@ if __name__ == "__main__":
     media = agent.getMedia(account, count=account.media_count)
 
     total_amount = account.media_count
+
     videos = []
-    v_count = 0
     for m in media:
         agent.update(m)
-        total_amount -= 1
         if m.is_video:
-            print("*", end="")
-            v_count += 1
             videos.append(m.video_url)
-    print("\n", v_count)
 
     download_video_files(videos, NEEDED_ACCOUNT)
